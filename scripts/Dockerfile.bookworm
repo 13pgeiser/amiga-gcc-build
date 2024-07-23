@@ -1,0 +1,46 @@
+FROM debian:bookworm-slim
+ENV DEBIAN_FRONTEND=noninteractive
+RUN set -ex \
+	&& apt-get update \
+	&& apt-get dist-upgrade -y \
+	&& apt-get install -y \
+		make \
+		wget \
+		git \
+		gcc \
+		g++ \
+		lhasa \
+		libgmp-dev \
+		libmpfr-dev \
+		libmpc-dev \
+		flex \
+		bison \
+		gettext \
+		texinfo \
+		ncurses-dev \
+		autoconf \
+		rsync \
+		libreadline-dev \
+		xz-utils \
+	&& apt-get clean \
+	&& rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*
+
+RUN set -ex \
+	&& git clone https://github.com/bebbo/amiga-gcc amiga-gcc \
+	&& cd amiga-gcc \
+	&& make update
+
+RUN set -ex \
+	&& mkdir -p release \
+	&& cd release \
+	&& tar cvJf amiga-gcc_src.tar.xz ../amiga-gcc
+
+RUN set -ex \
+	&& mv amiga-gcc amiga-gcc-sources \
+	&& cd amiga-gcc-sources \
+	&& make all -j$(nproc) PREFIX=/amiga-gcc
+
+RUN set -ex \
+	&& cd release \
+	&& tar cvJf amiga-gcc.tar.xz ../amiga-gcc
+
